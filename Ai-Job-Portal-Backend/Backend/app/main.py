@@ -7,6 +7,12 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from .resume_parser import router as resume_router
+from .looking_for import router as looking_for_router
+from .auth import router as auth_router
+from .jobs import router as jobs_router
+from .interviews import router as interviews_router
+
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"))
 
 APP_NAME = os.getenv("APP_NAME", "AI Job Portal API")
@@ -26,6 +32,12 @@ app = FastAPI(
     debug=DEBUG,
     description="Backend API for the AI Job Portal",
 )
+
+app.include_router(resume_router)
+app.include_router(looking_for_router)
+app.include_router(auth_router)
+app.include_router(jobs_router)
+app.include_router(interviews_router)
 
 app.add_middleware(
     CORSMiddleware,

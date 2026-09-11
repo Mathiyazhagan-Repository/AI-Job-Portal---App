@@ -1,0 +1,42 @@
+from app.resume_parser import parse_resume_text
+
+sample = '''
+Afnan Ahmed
+afnan.ahmed@example.com | +91 98765 43210
+Bengaluru, India | linkedin.com/in/afnanahmed | github.com/afnanahmed
+
+SUMMARY
+Software engineer with 3 years of experience in Python, FastAPI, React, and SQL. Built APIs and dashboards for analytics and recruitment workflows.
+
+SKILLS
+Python, FastAPI, React, TypeScript, JavaScript, PostgreSQL, SQL, Docker, Git, AWS, Linux
+
+EDUCATION
+Bachelor of Technology in Computer Science
+Vellore Institute of Technology, Vellore
+2018 - 2022
+CGPA: 8.7
+
+EXPERIENCE
+Software Engineer
+Acme Tech, Bengaluru
+2022 - Present
+- Built FastAPI services and React dashboards.
+- Improved API performance with SQL optimization.
+
+PROJECTS
+Job Portal Platform
+- Built candidate onboarding with resume parsing.
+- Used FastAPI and React.
+
+CERTIFICATIONS
+AWS Certified Cloud Practitioner
+
+ACHIEVEMENTS
+Won hackathon 2023
+'''
+
+result = parse_resume_text(sample)
+print(result['personal_info'])
+print('skills=', result['skills'])
+print('education=', result['education'])
