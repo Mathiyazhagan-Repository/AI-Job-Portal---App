@@ -98,9 +98,15 @@ def _get_recruiter_company(user_id: str, rest_base: str, service_key: str) -> st
     if isinstance(created, list) and created:
         company_id = created[0].get("id")
         try:
-            _rest("POST", "/company_members", rest_base=rest_base, service_key=service_key, body={"company_id": company_id, "user_id": user_id, "role": "owner"}, prefer="return=minimal")
-        except Exception:
-            pass
+            # We must link the real user_id to the company so they can find it again
+            member_body = {
+                "company_id": company_id,
+                "user_id": user_id,
+                "role": "admin"
+            }
+            _rest("POST", "/company_members", rest_base=rest_base, service_key=service_key, body=member_body, prefer="return=minimal")
+        except Exception as e:
+            print("Failed to add company_member:", e)
         return company_id
         
     return None
@@ -278,6 +284,47 @@ def create_job(payload: JobPayload, user: dict[str, Any] = Depends(get_current_u
         return {"status": "success", "job": _normalize_job(created[0])}
         
     raise HTTPException(500, "Failed to create job")
+
+
+@router.patch("/jobs/{job_id}/close")
+def close_job(job_id: str, user: dict[str, Any] = Depends(get_current_user)) -> dict[str, Any]:
+    _, service_key, rest_base = _config()
+    recruiter_id = str(user.get("sub", ""))
+    if not recruiter_id:
+        raise HTTPException(401, "Not authenticated")
+    
+    encoded_jid = urllib.parse.quote(job_id, safe="")
+    updated = _rest("PATCH", f"/jobs?id=eq.{encoded_jid}", rest_base=rest_base, service_key=service_key, body={"status": "closed"}, prefer="return=representation")
+    if isinstance(updated, list) and updated:
+        return {"status": "success"}
+    raise HTTPException(500, "Failed to close job")
+
+
+@router.post("/jobs/{job_id}/duplicate")
+def duplicate_job(job_id: str, user: dict[str, Any] = Depends(get_current_user)) -> dict[str, Any]:
+    _, service_key, rest_base = _config()
+    recruiter_id = str(user.get("sub", ""))
+    if not recruiter_id:
+        raise HTTPException(401, "Not authenticated")
+        
+    encoded_jid = urllib.parse.quote(job_id, safe="")
+    rows = _rest("GET", f"/jobs?id=eq.{encoded_jid}&select=*", rest_base=rest_base, service_key=service_key)
+    if not isinstance(rows, list) or not rows:
+        raise HTTPException(404, "Job not found")
+        
+    job_data = rows[0].copy()
+    job_data.pop("id", None)
+    job_data.pop("created_at", None)
+    job_data.pop("updated_at", None)
+    job_data.pop("applicants", None)
+    job_data.pop("views", None)
+    job_data["title"] = f"{job_data.get('title', 'Job')} (Copy)"
+    job_data["status"] = "draft"
+    
+    created = _rest("POST", "/jobs", rest_base=rest_base, service_key=service_key, body=job_data)
+    if isinstance(created, list) and created:
+        return {"status": "success", "job": _normalize_job(created[0])}
+    raise HTTPException(500, "Failed to duplicate job")
 
 
 @router.get("/jobs/{job_id}/applicants")

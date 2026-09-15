@@ -101,9 +101,17 @@ export function useAuth() {
   return context
 }
 
-export function RequireAuth({ children }: { children: React.ReactNode }) {
+export function RequireAuth({ children, role }: { children: React.ReactNode, role?: string | string[] }) {
   const { user, isLoading } = useAuth()
   if (isLoading) return null
   if (!user) return <Navigate to="/login" replace />
+
+  if (role) {
+    const roles = Array.isArray(role) ? role : [role]
+    if (!roles.includes(user.role || 'candidate')) {
+      return <Navigate to="/unauthorized" replace />
+    }
+  }
+
   return <>{children}</>
 }

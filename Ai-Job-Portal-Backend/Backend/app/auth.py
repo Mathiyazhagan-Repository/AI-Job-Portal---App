@@ -153,7 +153,9 @@ def _normalize_candidate_record(row: dict[str, Any]) -> dict[str, Any]:
 
 def _lookup_account_by_email(email: str, *, rest_base: str, service_key: str) -> dict[str, Any] | None:
     encoded_email = urllib.parse.quote(email, safe="")
-    for table in ("profiles", "candidates", "Candidates"):
+    
+    found_account = None
+    for table in ("Candidates", "candidates", "profiles"):
         try:
             rows = _rest(
                 "GET",
@@ -161,10 +163,21 @@ def _lookup_account_by_email(email: str, *, rest_base: str, service_key: str) ->
                 rest_base=rest_base,
                 service_key=service_key,
             )
-        except HTTPException:
-            continue
-        if isinstance(rows, list) and rows:
-            return _normalize_candidate_record(rows[0])
+            if isinstance(rows, list) and len(rows) > 0:
+                acct = rows[0]
+                if found_account is None:
+                    found_account = acct
+                
+                # If we found an account with a password, return it immediately
+                if acct.get("password") or acct.get("hashed_password"):
+                    return _normalize_candidate_record(acct)
+        except Exception:
+            pass
+            
+    # Fallback to the account we found even if it has no password
+    if found_account:
+        return _normalize_candidate_record(found_account)
+        
     return None
 
 
@@ -247,6 +260,23 @@ def login_user(payload: LoginPayload) -> dict[str, Any]:
         "name": candidate.get("full_name", ""),
         "role": candidate.get("role", "candidate"),
     }
+    
+    if token_payload["role"] == "recruiter":
+        try:
+            encoded_id = urllib.parse.quote(str(candidate["id"]), safe="")
+            rows = _rest("GET", f"/recruiters?id=eq.{encoded_id}&select=id", rest_base=rest_base, service_key=service_key)
+            if not isinstance(rows, list) or len(rows) == 0:
+                # Auto-create the recruiter profile if it's missing
+                recruiter_body = {
+                    "id": str(candidate["id"]),
+                    "full_name": candidate.get("full_name", ""),
+                    "email": candidate.get("email", email)
+                }
+                _rest("POST", "/recruiters", body=recruiter_body, rest_base=rest_base, service_key=service_key, prefer="return=minimal")
+        except Exception:
+            # If creating it fails (or table doesn't exist yet), let them login anyway
+            pass
+
     token = create_jwt(token_payload, secret)
     safe_candidate = {k: v for k, v in candidate.items() if k != "password"}
 

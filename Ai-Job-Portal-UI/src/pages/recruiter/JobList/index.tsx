@@ -22,6 +22,7 @@ import {
 } from '@/components/common'
 import { CompanyMark } from '@/features/jobs/JobCard'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/store/auth'
 
 const SPARK = [4, 9, 6, 12, 18, 14, 22, 19, 26, 24, 31, 28]
 
@@ -54,33 +55,23 @@ type JobListData = {
 function useRecruiterJobs(): JobListData {
   const [jobRows, setJobRows] = React.useState<Job[]>([])
   const [error, setError] = React.useState<string>()
+  const { token } = useAuth()
 
   const closeJob = React.useCallback(async (jobId: string) => {
     setError(undefined)
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError) {
-      setError(authError.message)
-      throw authError
-    }
-    if (!authData.user) {
+    if (!token) {
       const signInError = new Error('Sign in as a recruiter before closing a job.')
       setError(signInError.message)
       throw signInError
     }
 
-    const { data: updatedJob, error: updateError } = await supabase
-      .from('jobs')
-      .update({ status: 'closed' })
-      .eq('id', jobId)
-      .eq('recruiter_id', authData.user.id)
-      .select('id, status')
-      .maybeSingle()
-    if (updateError) {
-      setError(updateError.message)
-      throw updateError
-    }
-    if (!updatedJob) {
-      const notUpdatedError = new Error('The job could not be closed. Check that you are signed in as its recruiter.')
+    const res = await fetch(`http://localhost:8000/api/recruiter/jobs/${jobId}/close`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    
+    if (!res.ok) {
+      const notUpdatedError = new Error('The job could not be closed.')
       setError(notUpdatedError.message)
       throw notUpdatedError
     }
@@ -88,116 +79,54 @@ function useRecruiterJobs(): JobListData {
     setJobRows((current) => current.map((job) =>
       job.id === jobId ? { ...job, status: 'closed' } : job,
     ))
-  }, [])
+  }, [token])
 
   const duplicateJob = React.useCallback(async (job: Job) => {
     setError(undefined)
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError) {
-      setError(authError.message)
-      throw authError
-    }
-    if (!authData.user) {
+    if (!token) {
       const signInError = new Error('Sign in as a recruiter before duplicating a job.')
       setError(signInError.message)
       throw signInError
     }
 
-    const { data: duplicated, error: insertError } = await supabase
-      .from('jobs')
-      .insert({
-        recruiter_id: authData.user.id,
-        company_id: job.companyId,
-        title: `${job.title} (Copy)`,
-        location: job.location,
-        work_mode: job.workMode,
-        job_type: job.jobType,
-        application_method: job.applicationMethod ?? 'apply_now',
-        experience_min: job.experienceMin,
-        experience_max: job.experienceMax,
-        salary_min: job.salaryMin,
-        salary_max: job.salaryMax,
-        salary_visible: job.salaryVisible,
-        required_skills: job.requiredSkills,
-        preferred_skills: job.preferredSkills,
-        status: 'draft',
-        department: job.department,
-        openings: job.openings,
-        deadline: job.deadline,
-        description: job.description,
-        responsibilities: job.responsibilities,
-        qualifications: job.qualifications,
-        benefits: job.benefits,
-      })
-      .select('*')
-      .single()
-    if (insertError || !duplicated) {
-      const duplicateError = insertError ?? new Error('Unable to duplicate the job.')
+    const res = await fetch(`http://localhost:8000/api/recruiter/jobs/${job.id}/duplicate`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    
+    if (!res.ok) {
+      const duplicateError = new Error('Unable to duplicate the job.')
       setError(duplicateError.message)
       throw duplicateError
     }
 
-    const duplicate: Job = {
-      ...job,
-      id: duplicated.id,
-      title: duplicated.title,
-      postedAt: duplicated.created_at,
-      status: 'draft',
-      applicants: 0,
-      views: 0,
-    }
-    setJobRows((current) => [duplicate, ...current])
-  }, [])
+    const resData = await res.json()
+    const duplicated = resData.job
+    
+    setJobRows((current) => [duplicated as Job, ...current])
+  }, [token])
 
   React.useEffect(() => {
     let active = true
     const loadJobs = async () => {
       try {
-        const { data: authData, error: authError } = await supabase.auth.getUser()
-        if (authError) throw authError
-        if (!authData.user) {
+        if (!token) {
           if (active) {
             setJobRows([])
             setError('Sign in as a recruiter to load your jobs.')
           }
           return
         }
-        const { data, error } = await supabase
-          .from('jobs')
-          .select('*')
-          .eq('recruiter_id', authData.user.id)
-          .order('created_at', { ascending: false })
-        if (error) throw error
+        
+        const res = await fetch('http://localhost:8000/api/recruiter/jobs', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        if (!res.ok) throw new Error('Failed to fetch jobs')
+        const data = await res.json()
+        
         if (!active) return
 
-        const mapped = (data ?? []).map((row) => ({
-          id: row.id,
-          title: row.title,
-          companyId: row.company_id,
-          location: row.location,
-          workMode: row.work_mode,
-          jobType: row.job_type,
-          applicationMethod: row.application_method ?? 'apply_now',
-          experienceMin: row.experience_min,
-          experienceMax: row.experience_max,
-          salaryMin: row.salary_min,
-          salaryMax: row.salary_max,
-          salaryVisible: row.salary_visible,
-          requiredSkills: row.required_skills ?? [],
-          preferredSkills: row.preferred_skills ?? [],
-          postedAt: row.created_at,
-          applicants: row.applicants ?? 0,
-          views: row.views ?? 0,
-          status: row.status,
-          department: row.department ?? '',
-          openings: row.openings ?? 1,
-          deadline: row.deadline ?? row.created_at,
-          description: row.description ?? '',
-          responsibilities: row.responsibilities ?? [],
-          qualifications: row.qualifications ?? [],
-          benefits: row.benefits ?? [],
-        })) as Job[]
-        setJobRows(mapped)
+        setJobRows(data as Job[])
         setError(undefined)
       }
       catch (loadError) {
@@ -208,15 +137,11 @@ function useRecruiterJobs(): JobListData {
     }
 
     void loadJobs()
-    const { data: authListener } = supabase.auth.onAuthStateChange(() => {
-      void loadJobs()
-    })
 
     return () => {
       active = false
-      authListener.subscription.unsubscribe()
     }
-  }, [])
+  }, [token])
 
   return {
     jobs: jobRows,

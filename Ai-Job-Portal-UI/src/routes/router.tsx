@@ -53,7 +53,7 @@ export const router = createBrowserRouter([
   /* ── Candidate ───────────────────────────────────────── */
   {
     path: 'candidate',
-    element: <RequireAuth><AppLayout persona="candidate" /></RequireAuth>,
+    element: <RequireAuth role="candidate"><AppLayout persona="candidate" /></RequireAuth>,
     errorElement: <ErrorBoundaryPage />,
     children: [
       { index: true, lazy: () => import('@/pages/candidate/Dashboard') },
@@ -84,7 +84,7 @@ export const router = createBrowserRouter([
   /* ── Recruiter / Company ─────────────────────────────── */
   {
     path: 'recruiter',
-    element: <RequireAuth><AppLayout persona="recruiter" /></RequireAuth>,
+    element: <RequireAuth role="recruiter"><AppLayout persona="recruiter" /></RequireAuth>,
     errorElement: <ErrorBoundaryPage />,
     children: [
       { index: true, lazy: () => import('@/pages/recruiter/Dashboard') },
@@ -110,7 +110,7 @@ export const router = createBrowserRouter([
   /* ── Admin ───────────────────────────────────────────── */
   {
     path: 'admin',
-    element: <RequireAuth><AppLayout persona="admin" /></RequireAuth>,
+    element: <RequireAuth role="admin"><AppLayout persona="admin" /></RequireAuth>,
     errorElement: <ErrorBoundaryPage />,
     children: [
       { index: true, lazy: () => import('@/pages/admin/Dashboard') },
