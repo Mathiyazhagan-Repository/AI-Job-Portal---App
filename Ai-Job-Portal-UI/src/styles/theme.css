@@ -1,0 +1,616 @@
+@import 'tailwindcss';
+@import './variants.css';
+
+@custom-variant dark (&:is(.dark *));
+
+/* ═══════════════════════════════════════════════════════════════
+   DESIGN TOKENS  →  these generate Tailwind utilities
+   --color-* → bg-*, text-*, border-*
+   These NEVER change between design variants (DESIGN.md §6.5)
+   ═══════════════════════════════════════════════════════════════ */
+@theme {
+  /* ── Brand — PRD Part 39–40 primary / secondary ── */
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-200: #bfdbfe;
+  --color-brand-300: #93c5fd;
+  --color-brand-400: #60a5fa;
+  --color-brand-500: #3b82f6;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+  --color-brand-800: #1e40af;
+  --color-brand-900: #1e3a8a;
+
+  --color-accent-50: #f5f3ff;
+  --color-accent-100: #ede9fe;
+  --color-accent-200: #ddd6fe;
+  --color-accent-500: #8b5cf6;
+  --color-accent-600: #7c3aed;
+  --color-accent-700: #6d28d9;
+
+  /* ── Paper — the light canvas ── */
+  --color-paper: #ffffff;
+  --color-canvas: #fafbfc;
+  --color-subtle: #f4f6f8;
+  --color-hover: #edf0f4;
+  --color-line: #e3e8ef;
+  --color-line-strong: #cdd5e0;
+
+  /* ── Ink ── */
+  --color-ink: #0b1220;
+  --color-ink-2: #475569;
+  --color-ink-3: #64748b;
+
+  /* ── Semantic — PRD Part 39–40 ── */
+  --color-success: #16a34a;
+  --color-success-bg: #f0fdf4;
+  --color-warning: #d97706;
+  --color-warning-bg: #fffbeb;
+  --color-danger: #dc2626;
+  --color-danger-bg: #fef2f2;
+  --color-info: #0891b2;
+  --color-info-bg: #ecfeff;
+
+  /* ── Match-score bands — text + tint pair, both AA on white ── */
+  --color-score-elite: #047857;
+  --color-score-elite-bg: #ecfdf5;
+  --color-score-strong: #1d4ed8;
+  --color-score-strong-bg: #eff6ff;
+  --color-score-fair: #b45309;
+  --color-score-fair-bg: #fffbeb;
+  --color-score-low: #475569;
+  --color-score-low-bg: #f1f5f9;
+  --color-score-blocked: #7e22ce;
+  --color-score-blocked-bg: #faf5ff;
+
+  /* ── Categorical accent palette ──────────────────────────────
+     Each metric/section owns ONE hue, consistently, everywhere it
+     appears. Colour still encodes *which thing* — the same discipline
+     as categorical chart colours — it is simply used far more widely
+     in Direction A, which is the colourful direction. Every pair is a
+     dark ink on a 5% tint, so all of them clear AA on white.        */
+  --color-tone-indigo: #4338ca;   --color-tone-indigo-bg: #eef2ff;   --color-tone-indigo-vivid: #6366f1;
+  --color-tone-violet: #6d28d9;   --color-tone-violet-bg: #f5f3ff;   --color-tone-violet-vivid: #8b5cf6;
+  --color-tone-emerald: #047857;  --color-tone-emerald-bg: #ecfdf5;  --color-tone-emerald-vivid: #10b981;
+  --color-tone-teal: #0f766e;     --color-tone-teal-bg: #f0fdfa;     --color-tone-teal-vivid: #14b8a6;
+  --color-tone-sky: #0369a1;      --color-tone-sky-bg: #f0f9ff;      --color-tone-sky-vivid: #0ea5e9;
+  --color-tone-amber: #b45309;    --color-tone-amber-bg: #fffbeb;    --color-tone-amber-vivid: #f59e0b;
+  --color-tone-rose: #be123c;     --color-tone-rose-bg: #fff1f2;     --color-tone-rose-vivid: #f43f5e;
+  --color-tone-fuchsia: #a21caf;  --color-tone-fuchsia-bg: #fdf4ff;  --color-tone-fuchsia-vivid: #d946ef;
+
+  /* ── ATS pipeline stages (9 + 2 terminal, PRD Part 10) ── */
+  --color-stage-applied: #475569;
+  --color-stage-applied-bg: #f1f5f9;
+  --color-stage-screening: #0e7490;
+  --color-stage-screening-bg: #ecfeff;
+  --color-stage-shortlisted: #1d4ed8;
+  --color-stage-shortlisted-bg: #eff6ff;
+  --color-stage-assessment: #4338ca;
+  --color-stage-assessment-bg: #eef2ff;
+  --color-stage-interview: #6d28d9;
+  --color-stage-interview-bg: #f5f3ff;
+  --color-stage-tech: #7e22ce;
+  --color-stage-tech-bg: #faf5ff;
+  --color-stage-hr: #a21caf;
+  --color-stage-hr-bg: #fdf4ff;
+  --color-stage-offer: #b45309;
+  --color-stage-offer-bg: #fffbeb;
+  --color-stage-hired: #047857;
+  --color-stage-hired-bg: #ecfdf5;
+  --color-stage-rejected: #b91c1c;
+  --color-stage-rejected-bg: #fef2f2;
+  --color-stage-withdrawn: #64748b;
+  --color-stage-withdrawn-bg: #f8fafc;
+
+  /* ── Typography ── */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: 'Bricolage Grotesque', 'Inter', ui-sans-serif, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+
+  --text-display-1: clamp(2.5rem, 7vw, 5.5rem);
+  --text-display-1--line-height: 0.95;
+  --text-display-1--letter-spacing: -0.035em;
+  --text-display-2: clamp(2rem, 5vw, 3.5rem);
+  --text-display-2--line-height: 1.02;
+  --text-display-2--letter-spacing: -0.03em;
+
+  /* ── Elevation — light-theme shadows are TIGHT and LOW opacity ── */
+  --shadow-xs: 0 1px 2px 0 rgb(11 18 32 / 0.04);
+  --shadow-sm: 0 1px 3px 0 rgb(11 18 32 / 0.06), 0 1px 2px -1px rgb(11 18 32 / 0.04);
+  --shadow-md: 0 4px 12px -2px rgb(11 18 32 / 0.08), 0 2px 4px -2px rgb(11 18 32 / 0.04);
+  --shadow-lg: 0 16px 40px -8px rgb(11 18 32 / 0.12);
+  --shadow-xl: 0 32px 64px -12px rgb(11 18 32 / 0.16);
+  --shadow-ring: 0 0 0 1px rgb(37 99 235 / 0.15), 0 8px 24px -6px rgb(37 99 235 / 0.12);
+
+  /* ── Motion ── */
+  --ease-out-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── Breakpoints — PRD Part 39–40 ── */
+  --breakpoint-sm: 40rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 80rem;
+  --breakpoint-2xl: 96rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   shadcn/ui CONTRACT
+   shadcn components read these names. Point them at our tokens
+   once and every generated component is on-brand immediately.
+   --radius is driven by the variant layer (DESIGN.md §6.6a).
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  --radius: var(--v-radius);
+  --background: var(--color-canvas);
+  --foreground: var(--color-ink);
+  --card: var(--color-paper);
+  --card-foreground: var(--color-ink);
+  --popover: var(--color-paper);
+  --popover-foreground: var(--color-ink);
+  --primary: var(--color-brand-600);
+  --primary-foreground: #ffffff;
+  --secondary: var(--color-subtle);
+  --secondary-foreground: var(--color-ink);
+  --muted: var(--color-subtle);
+  --muted-foreground: var(--color-ink-3);
+  --accent: var(--color-brand-50);
+  --accent-foreground: var(--color-brand-700);
+  --destructive: var(--color-danger);
+  --border: var(--color-line);
+  --input: var(--color-line);
+  --ring: var(--color-brand-500);
+  --chart-1: #2563eb;
+  --chart-2: #7c3aed;
+  --chart-3: #0891b2;
+  --chart-4: #f59e0b;
+  --chart-5: #10b981;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BASE
+   ═══════════════════════════════════════════════════════════════ */
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: 'cv05', 'ss03';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Focus ring is RESTYLED, never removed — PRD Part 42 */
+  :focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background: var(--color-brand-100);
+    color: var(--color-brand-900);
+  }
+
+  /* Quieter scrollbars — this UI has a lot of scrollable panes */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-line-strong);
+    border-radius: 99px;
+    border: 3px solid var(--color-canvas);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-ink-3);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   UTILITIES
+   ═══════════════════════════════════════════════════════════════ */
+/**
+ * The sidebar renders one notch larger than the rest of the app — the size it
+ * lands at when you zoom the window to 110%, which is where the nav reads
+ * best. Rather than hand-tuning twenty utility classes, this rescales the two
+ * variables every spacing and type utility is built from, so the whole subtree
+ * scales together exactly the way a browser zoom does. Line heights are
+ * unitless ratios in Tailwind v4, so they follow the font size on their own.
+ *
+ * Fixed pixel widths and numeric icon props are not variable-driven, so those
+ * few are scaled by hand at their call sites.
+ */
+/* The logo marquee. Translating by exactly -50% of a track that holds two
+   copies of the list puts the second copy where the first started, so the
+   loop is seamless. Reduced motion is handled at the call site with
+   `motion-reduce:animate-none`, which leaves the strip scrollable by hand. */
+@keyframes kairo-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@utility animate-marquee {
+  animation: kairo-marquee 38s linear infinite;
+  will-change: transform;
+}
+
+/* Same seamless-loop trick, translating up the cross axis instead — the
+   track holds two copies of a vertical list and moves exactly -50% of its
+   own height, so the second copy lands where the first began. */
+@keyframes kairo-marquee-y {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-50%); }
+}
+
+@utility animate-marquee-y {
+  animation: kairo-marquee-y 38s linear infinite;
+  will-change: transform;
+}
+
+/* ── Marketing colour, bright ──────────────────────────────────────────
+   Two strengths. `band-*` is a strong tint that still takes dark text;
+   `blaze-*` is the full saturated hue and takes white.
+
+   22% of the vivid stop is roughly the ceiling for a band: past that,
+   `--color-ink-2` body copy drops under the 4.5:1 floor and the section
+   stops being readable. The blaze sections invert instead — white text on
+   full colour — which is why they can go all the way up. Verified by
+   sampling rendered pixels, not by eye.
+
+   Marketing surfaces only. Score bands, stage pills and anything in the
+   product UI keep the §4 Rule 2 contract untouched. */
+@utility band-indigo  { background-color: color-mix(in oklab, var(--color-tone-indigo-vivid)  20%, #fff); }
+@utility band-violet  { background-color: color-mix(in oklab, var(--color-tone-violet-vivid)  20%, #fff); }
+@utility band-emerald { background-color: color-mix(in oklab, var(--color-tone-emerald-vivid) 22%, #fff); }
+@utility band-sky     { background-color: color-mix(in oklab, var(--color-tone-sky-vivid)     20%, #fff); }
+@utility band-amber   { background-color: color-mix(in oklab, var(--color-tone-amber-vivid)   24%, #fff); }
+@utility band-fuchsia { background-color: color-mix(in oklab, var(--color-tone-fuchsia-vivid) 18%, #fff); }
+@utility band-teal    { background-color: color-mix(in oklab, var(--color-tone-teal-vivid)    22%, #fff); }
+@utility band-rose    { background-color: color-mix(in oklab, var(--color-tone-rose-vivid)    18%, #fff); }
+
+/* Full-saturation sections. Everything inside these runs white or on a
+   white card.
+
+   Built from the SOLID tone stops, not `-vivid`. The vivid stops are tuned to
+   sit under dark text on a white card; used as a ground they are far too
+   light for white type — measured at 2.16:1 on the amber stop, well under the
+   4.5:1 floor. The solid stops are the AA-on-white variants, dark enough that
+   white clears comfortably while still reading as saturated colour. */
+@utility blaze-emerald {
+  background-image: linear-gradient(115deg, #0b6b63, var(--color-tone-emerald) 45%, var(--color-tone-sky));
+}
+@utility blaze-sunset {
+  background-image: linear-gradient(115deg, var(--color-tone-rose), #b0460a 48%, var(--color-tone-fuchsia));
+}
+@utility blaze-indigo {
+  background-image: linear-gradient(115deg, var(--color-tone-indigo), var(--color-tone-violet) 50%, var(--color-tone-fuchsia));
+}
+
+/* The footer ground.
+   Bright and plain: one soft tint, dark text, no mesh. A job board's footer is
+   a directory people scan for a link — the earlier deep-violet version read as
+   a marketing flourish and made the links the least legible thing on the page.
+   Measured at 15.4:1 for body text. */
+@utility footer-tint {
+  background-color: color-mix(in oklab, var(--color-tone-sky-vivid) 22%, #fff);
+}
+
+/* The sticky bar. Tinted to the same strength as a section band, but kept
+   translucent: it sits over a mesh hero and three saturated sections, so a
+   solid bar would fight whichever one happens to be behind it. */
+@utility header-tint {
+  background-color: color-mix(in oklab, var(--color-tone-sky-vivid) 20%, #fff);
+}
+
+/* The hero ground.
+   A mesh of four radial stops over a tinted base. It stays light on purpose:
+   the hero carries the kinetic headline, the search field and the trust chips,
+   all of which are dark-on-light, so a blaze treatment here would mean
+   inverting the entire block. Measured at 15.9:1 for the headline. */
+@utility hero-mesh {
+  background-color: color-mix(in oklab, var(--color-tone-indigo-vivid) 10%, #fff);
+  background-image:
+    radial-gradient(62% 60% at 12% 8%,  color-mix(in oklab, var(--color-tone-teal-vivid)    45%, transparent), transparent 72%),
+    radial-gradient(58% 62% at 88% 4%,  color-mix(in oklab, var(--color-tone-fuchsia-vivid) 42%, transparent), transparent 70%),
+    radial-gradient(70% 70% at 50% 96%, color-mix(in oklab, var(--color-tone-violet-vivid)  34%, transparent), transparent 74%),
+    radial-gradient(52% 55% at 68% 46%, color-mix(in oklab, var(--color-tone-sky-vivid)     30%, transparent), transparent 70%);
+}
+
+/* Gradient headline text, for the light bands. */
+@utility text-gradient-indigo {
+  background-image: linear-gradient(100deg, var(--color-tone-indigo), var(--color-tone-violet-vivid) 55%, var(--color-tone-fuchsia-vivid));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+@utility text-gradient-emerald {
+  background-image: linear-gradient(100deg, var(--color-tone-teal), var(--color-tone-emerald-vivid) 60%, var(--color-tone-sky-vivid));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+@utility text-gradient-amber {
+  background-image: linear-gradient(100deg, var(--color-tone-rose), var(--color-tone-amber-vivid) 55%, var(--color-tone-fuchsia-vivid));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+@utility text-gradient-sky {
+  background-image: linear-gradient(100deg, var(--color-tone-sky), var(--color-tone-indigo-vivid) 60%, var(--color-tone-violet-vivid));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+@keyframes bg-pan {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@utility animate-bg-pan {
+  animation: bg-pan 3s ease infinite;
+}
+
+@utility sidebar-zoom {
+  --spacing: 0.275rem;      /* 0.25 × 1.1 */
+  --text-xs: 0.825rem;      /* 0.75 × 1.1 */
+  --text-sm: 0.9625rem;     /* 0.875 × 1.1 */
+  --text-base: 1.1rem;      /* 1 × 1.1 */
+}
+
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The one gradient in the product — brand → accent (PRD primary → secondary) */
+@utility bg-signal {
+  background-image: linear-gradient(135deg, var(--color-brand-600) 0%, var(--color-accent-600) 100%);
+}
+
+@utility text-signal {
+  background-image: linear-gradient(135deg, var(--color-brand-600) 0%, var(--color-accent-600) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Variant-aware shape utilities — one component serves all 3 directions */
+@utility rounded-v {
+  border-radius: var(--v-radius);
+}
+@utility rounded-v-control {
+  border-radius: var(--v-radius-control);
+}
+@utility p-v-card {
+  padding: var(--v-pad-card);
+}
+@utility gap-v {
+  gap: var(--v-gutter);
+}
+@utility h-v-row {
+  height: var(--v-row-h);
+}
+@utility shadow-v-card {
+  box-shadow: var(--v-card-shadow);
+}
+
+/* Interactive elevation. One utility, three directions:
+   A lifts 2px and softens · B highlights its edge in brand · C lifts 6px. */
+@utility hover-lift {
+  transition:
+    box-shadow calc(240ms * var(--v-motion)) var(--v-ease),
+    transform calc(240ms * var(--v-motion)) var(--v-ease),
+    border-color calc(240ms * var(--v-motion)) var(--v-ease);
+
+  &:hover {
+    box-shadow: var(--v-card-shadow-hover);
+    transform: translateY(var(--v-lift));
+  }
+}
+
+/* Every interactive surface uses the direction's easing and tempo. */
+@utility transition-v {
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+  transition-duration: calc(180ms * var(--v-motion));
+  transition-timing-function: var(--v-ease);
+}
+
+/* Score ring — animatable conic gradient (DESIGN.md §7.1) */
+@property --ring-p {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   KEYFRAMES
+   ═══════════════════════════════════════════════════════════════ */
+@keyframes kairo-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes kairo-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes kairo-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes kairo-pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgb(37 99 235 / 0.35);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgb(37 99 235 / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgb(37 99 235 / 0);
+  }
+}
+
+@keyframes kairo-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes kairo-slide-right {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes kairo-bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes kairo-pan-y {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+@keyframes kairo-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(2%, -3%, 0) rotate(4deg);
+  }
+}
+
+@layer utilities {
+  .animate-rise {
+    animation: kairo-rise calc(420ms * var(--v-motion)) var(--ease-out-soft) both;
+  }
+  .animate-fade {
+    animation: kairo-fade calc(300ms * var(--v-motion)) var(--ease-out-soft) both;
+  }
+  .animate-pulse-ring {
+    animation: kairo-pulse-ring 2s infinite;
+  }
+  .animate-drift {
+    animation: kairo-drift 18s ease-in-out infinite;
+  }
+  .animate-scale-in {
+    animation: kairo-scale-in calc(260ms * var(--v-motion)) var(--v-ease) both;
+  }
+  .animate-slide-right {
+    animation: kairo-slide-right calc(320ms * var(--v-motion)) var(--v-ease) both;
+  }
+  /* Staggered list entrances — set --i on each child. */
+  .animate-stagger > * {
+    animation: kairo-rise calc(380ms * var(--v-motion)) var(--v-ease) both;
+    animation-delay: calc(var(--i, 0) * 45ms * var(--v-motion));
+  }
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      rgb(255 255 255 / 0.6),
+      transparent
+    );
+    animation: kairo-shimmer 1.6s infinite;
+  }
+}
+
+/* Reduced motion — collapses every direction to an instant end state. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --v-motion: 0.001;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* The blanket rule above parks an INFINITE animation on its final
+     keyframe. For decorative loops whose last frame is `opacity: 0`
+     (ping, pulse, drift) that makes the element vanish instead of
+     holding still — so those are switched off outright rather than
+     fast-forwarded. */
+  .animate-ping,
+  .animate-pulse,
+  .animate-bounce,
+  .animate-pulse-ring,
+  .animate-drift,
+  .shimmer::after {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

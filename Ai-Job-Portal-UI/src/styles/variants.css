@@ -1,0 +1,101 @@
+/* ═══════════════════════════════════════════════════════════════
+   THE VARIANT SHAPE LAYER  —  DESIGN.md §6.6a
+   ---------------------------------------------------------------
+   ~60 lines that change density, radius, elevation, type scale and
+   motion across EVERY component at once. This is what makes three
+   design directions affordable: shape lives here, not in components.
+
+   Components consume these through `rounded-v`, `p-v-card`,
+   `h-v-row`, `gap-v`, `shadow-v-card`, `hover-lift` (theme.css).
+
+   Colour tokens NEVER appear here — colour does not vary by
+   direction (DESIGN.md §6.5).
+
+   NOTE — corrected 2026-08-31. The first pass took "almost no
+   shadow, near-zero motion" for Direction B literally and the
+   result read as *unstyled*, not *dense*. Linear (B's stated
+   reference) has crisp elevation and fast, present micro-motion.
+   Density is achieved by tight spacing, not by removing definition.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Direction A · Editorial Clarity (default) ────────────────
+   Optimises for legibility and first-time comprehension.        */
+:root,
+[data-variant='a'] {
+  --v-radius: 0.75rem;
+  --v-radius-control: 0.5rem;
+  --v-row-h: 3.25rem;
+  --v-gutter: 1rem;
+  --v-pad-card: 1.25rem;
+  --v-pad-page: 1.5rem;
+
+  --v-card-shadow: 0 1px 3px 0 rgb(11 18 32 / 0.06), 0 1px 2px -1px rgb(11 18 32 / 0.04);
+  --v-card-shadow-hover: 0 8px 24px -6px rgb(11 18 32 / 0.12), 0 2px 6px -2px rgb(11 18 32 / 0.06);
+  --v-card-border: 1px;
+  --v-lift: -2px;
+
+  --v-font-body: 1rem;
+  --v-font-heading: 1.5rem;
+  --v-leading: 1.6;
+
+  --v-motion: 1;
+  --v-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --v-section-y: 5rem;
+}
+
+/* ── Direction B · Command Console ────────────────────────────
+   Optimises for throughput. Tight rows, crisp edges, fast motion,
+   keyboard-first. Dense — never flat or dead.                   */
+[data-variant='b'] {
+  --v-radius: 0.5rem;
+  --v-radius-control: 0.375rem;
+  --v-row-h: 2.5rem;
+  --v-gutter: 0.875rem;
+  --v-pad-card: 1rem;
+  --v-pad-page: 1.25rem;
+
+  /* Crisp, tight elevation — definition without softness. */
+  --v-card-shadow: 0 0 0 1px rgb(11 18 32 / 0.04), 0 1px 2px 0 rgb(11 18 32 / 0.06);
+  --v-card-shadow-hover: 0 0 0 1px rgb(37 99 235 / 0.18), 0 2px 8px -2px rgb(11 18 32 / 0.1);
+  --v-card-border: 1px;
+  --v-lift: 0px; /* console UI does not bounce — it highlights */
+
+  --v-font-body: 0.9375rem; /* 15px — dense but readable */
+  --v-font-heading: 1.125rem;
+  --v-leading: 1.5;
+
+  --v-motion: 0.55; /* fast and present, not absent */
+  --v-ease: cubic-bezier(0.3, 0.9, 0.3, 1);
+  --v-section-y: 3rem;
+}
+
+/* ── Direction C · Expressive Canvas ──────────────────────────
+   Optimises for emotional pull and mobile. Big radii, lifted
+   elevation, generous motion, separation by shadow not border.  */
+[data-variant='c'] {
+  --v-radius: 1.25rem;
+  --v-radius-control: 0.75rem;
+  --v-row-h: 3.75rem;
+  --v-gutter: 1.5rem;
+  --v-pad-card: 1.75rem;
+  --v-pad-page: 2rem;
+
+  --v-card-shadow: 0 10px 30px -8px rgb(11 18 32 / 0.1), 0 2px 8px -2px rgb(11 18 32 / 0.05);
+  --v-card-shadow-hover: 0 24px 56px -12px rgb(11 18 32 / 0.18), 0 6px 16px -6px rgb(11 18 32 / 0.08);
+  --v-card-border: 0px;
+  --v-lift: -6px;
+
+  --v-font-body: 1.0625rem;
+  --v-font-heading: 2rem;
+  --v-leading: 1.7;
+
+  --v-motion: 1.15;
+  --v-ease: cubic-bezier(0.34, 1.3, 0.64, 1); /* gentle spring */
+  --v-section-y: 6.5rem;
+}
+
+/* Body type and rhythm scale with the direction */
+body {
+  font-size: var(--v-font-body);
+  line-height: var(--v-leading);
+}
