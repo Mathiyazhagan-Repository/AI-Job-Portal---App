@@ -12,6 +12,14 @@ from .looking_for import router as looking_for_router
 from .auth import router as auth_router
 from .jobs import router as jobs_router
 from .interviews import router as interviews_router
+from .profile import router as profile_router
+from .applications import router as applications_router
+from .recruiter import router as recruiter_router
+from .team import router as team_router
+from .companies import router as companies_router
+from .notifications import router as notifications_router
+from .analytics import router as analytics_router
+from .admin import router as admin_router
 
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"))
 
@@ -38,6 +46,14 @@ app.include_router(looking_for_router)
 app.include_router(auth_router)
 app.include_router(jobs_router)
 app.include_router(interviews_router)
+app.include_router(profile_router)
+app.include_router(applications_router)
+app.include_router(recruiter_router)
+app.include_router(team_router)
+app.include_router(companies_router)
+app.include_router(notifications_router)
+app.include_router(analytics_router)
+app.include_router(admin_router)
 
 app.add_middleware(
     CORSMiddleware,

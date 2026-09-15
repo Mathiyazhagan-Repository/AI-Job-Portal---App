@@ -17,7 +17,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
-from .auth import get_current_user
+from .auth import get_current_user, _find_user_by_id
 
 router = APIRouter(prefix="/api")
 
@@ -141,7 +141,10 @@ def save_looking_for(payload: LookingForPayload) -> dict[str, Any]:
 
 
 @router.get("/candidate/profile")
-def get_candidate_profile(email: str) -> dict[str, Any]:
+def get_candidate_profile(
+    email: str | None = None,
+    user: dict[str, Any] = Depends(get_current_user),
+) -> dict[str, Any]:
     """Return the candidate profile used by the frontend profile store."""
     _, service_key, rest_base = _config()
     if not service_key:
@@ -150,36 +153,35 @@ def get_candidate_profile(email: str) -> dict[str, Any]:
             detail="Server misconfigured: missing SUPABASE_SERVICE_ROLE_KEY",
         )
 
-    normalized_email = email.strip().lower()
-    if not normalized_email or "@" not in normalized_email:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Please provide a valid email address.",
+    candidate_id = str(user.get("sub") or "")
+    candidate = _find_user_by_id(candidate_id, rest_base=rest_base, service_key=service_key)
+    normalized_email = (email or "").strip().lower()
+    if not candidate and normalized_email and "@" in normalized_email:
+        encoded_email = urllib.parse.quote(normalized_email, safe="")
+        candidates = _rest(
+            "GET",
+            f"/Candidates?email=eq.{encoded_email}&select=id,full_name,email,location,role&limit=1",
+            rest_base=rest_base,
+            service_key=service_key,
         )
-
-    encoded_email = urllib.parse.quote(normalized_email, safe="")
-    candidates = _rest(
-        "GET",
-        f"/Candidates?email=eq.{encoded_email}&select=id,full_name,email,location,role&limit=1",
-        rest_base=rest_base,
-        service_key=service_key,
-    )
-
-    if not candidates:
+        candidate = candidates[0] if candidates else None
+    if not candidate:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Candidate not found")
 
-    candidate = candidates[0]
     return {
         "id": candidate.get("id"),
         "name": candidate.get("full_name", ""),
-        "email": candidate.get("email", normalized_email),
+        "email": candidate.get("email", user.get("email", normalized_email)),
         "location": candidate.get("location") or "",
         "role": candidate.get("role", "candidate"),
     }
 
 
 @router.patch("/candidate/profile")
-def update_candidate_profile(payload: CandidateProfileUpdate) -> dict[str, Any]:
+def update_candidate_profile(
+    payload: CandidateProfileUpdate,
+    user: dict[str, Any] = Depends(get_current_user),
+) -> dict[str, Any]:
     """Update parsed profile fields without changing the account email."""
     _, service_key, rest_base = _config()
     if not service_key:
@@ -188,26 +190,11 @@ def update_candidate_profile(payload: CandidateProfileUpdate) -> dict[str, Any]:
             detail="Server misconfigured: missing SUPABASE_SERVICE_ROLE_KEY",
         )
 
-    authoritative_email = (payload.authoritative_email or "").strip().lower()
-    parsed_email = (payload.parsed_email or "").strip().lower()
-    lookup_email = authoritative_email or parsed_email
-    if not lookup_email or "@" not in lookup_email:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="An authoritative or parsed email is required to identify the candidate.",
-        )
-
-    encoded_email = urllib.parse.quote(lookup_email, safe="")
-    candidates = _rest(
-        "GET",
-        f"/Candidates?email=eq.{encoded_email}&select=id,full_name,email,location,role&limit=1",
-        rest_base=rest_base,
-        service_key=service_key,
-    )
-    if not candidates:
+    candidate_id = str(user.get("sub") or "")
+    candidate = _find_user_by_id(candidate_id, rest_base=rest_base, service_key=service_key)
+    if not candidate:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Candidate not found")
 
-    candidate = candidates[0]
     candidate_update: dict[str, Any] = {
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }

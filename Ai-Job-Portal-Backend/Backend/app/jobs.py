@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import urllib.parse
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, status
@@ -17,7 +18,11 @@ def _first(row: dict[str, Any], *names: str, default: Any = None) -> Any:
 
 
 def _as_list(value: Any) -> list[Any]:
-    return value if isinstance(value, list) else []
+    if isinstance(value, list):
+        return [item for item in value]
+    if isinstance(value, str):
+        return [value] if value.strip() else []
+    return []
 
 
 def _normalize_job(row: dict[str, Any]) -> dict[str, Any]:
@@ -51,23 +56,36 @@ def _normalize_job(row: dict[str, Any]) -> dict[str, Any]:
 
 @router.get("/jobs")
 def list_jobs() -> list[dict[str, Any]]:
-    """Return published jobs from Supabase in the frontend job shape."""
     _, service_key, rest_base = _config()
     if not service_key:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Server misconfigured: missing SUPABASE_SERVICE_ROLE_KEY",
-        )
+        raise HTTPException(500, "Server misconfigured: missing SUPABASE_SERVICE_ROLE_KEY")
+
+    rows = _rest("GET", "/jobs?select=*", rest_base=rest_base, service_key=service_key)
+    if not isinstance(rows, list):
+        return []
+
+    jobs = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        normalized = _normalize_job(row)
+        if normalized["status"] == "published":
+            jobs.append(normalized)
+    return jobs
+
+
+@router.get("/jobs/{job_id}")
+def get_job(job_id: str) -> dict[str, Any]:
+    _, service_key, rest_base = _config()
+    if not service_key:
+        raise HTTPException(500, "Server misconfigured: missing SUPABASE_SERVICE_ROLE_KEY")
 
     rows = _rest(
         "GET",
-        "/jobs?select=*",
+        f"/jobs?id=eq.{urllib.parse.quote(job_id, safe='')}&select=*&limit=1",
         rest_base=rest_base,
         service_key=service_key,
     )
-    if not isinstance(rows, list):
-        return []
-    return [
-        job for job in (_normalize_job(row) for row in rows)
-        if job["status"] == "published"
-    ]
+    if not isinstance(rows, list) or not rows:
+        raise HTTPException(404, "Job not found")
+    return _normalize_job(rows[0])
