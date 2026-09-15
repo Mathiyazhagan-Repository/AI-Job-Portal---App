@@ -24,34 +24,34 @@ const TREND = [12, 18, 14, 22, 26, 21, 30, 28, 34, 31, 38, 42]
 
 const WEEK_LABELS = ['Wk 1', 'Wk 2', 'Wk 3', 'Wk 4', 'Wk 5', 'Wk 6', 'Wk 7', 'Wk 8']
 
-const INFLOW = [
-  { label: 'Applications', tone: 'indigo' as Tone, points: [148, 172, 161, 205, 238, 219, 274, 312] },
-  { label: 'Shortlisted', tone: 'emerald' as Tone, points: [38, 44, 41, 55, 61, 58, 72, 84] },
-  { label: 'Interviewed', tone: 'fuchsia' as Tone, points: [11, 14, 12, 18, 21, 19, 24, 28] },
+const INFLOW_DEFAULT = [
+  { label: 'Applications', tone: 'indigo' as Tone, points: [0, 0, 0, 0, 0, 0, 0, 0] },
+  { label: 'Shortlisted', tone: 'emerald' as Tone, points: [0, 0, 0, 0, 0, 0, 0, 0] },
+  { label: 'Interviewed', tone: 'fuchsia' as Tone, points: [0, 0, 0, 0, 0, 0, 0, 0] },
 ]
 
-const SOURCES = [
-  { label: 'Kairo search', value: 42, tone: 'indigo' as Tone },
-  { label: 'Job alerts', value: 24, tone: 'amber' as Tone },
-  { label: 'Referrals', value: 16, tone: 'emerald' as Tone },
-  { label: 'Careers page', value: 11, tone: 'sky' as Tone },
-  { label: 'Sourced', value: 7, tone: 'fuchsia' as Tone },
+const SOURCES_DEFAULT = [
+  { label: 'Kairo search', value: 0, tone: 'indigo' as Tone },
+  { label: 'Job alerts', value: 0, tone: 'amber' as Tone },
+  { label: 'Referrals', value: 0, tone: 'emerald' as Tone },
+  { label: 'Careers page', value: 0, tone: 'sky' as Tone },
+  { label: 'Sourced', value: 0, tone: 'fuchsia' as Tone },
 ]
 
-const TIME_IN_STAGE = [
-  { label: 'Screening', value: 1.4, tone: 'sky' as Tone, hint: 'target 2.0d' },
-  { label: 'Assessment', value: 3.1, tone: 'violet' as Tone, hint: 'target 3.0d' },
-  { label: 'Interview', value: 4.8, tone: 'fuchsia' as Tone, hint: 'target 4.0d' },
-  { label: 'Feedback', value: 2.6, tone: 'amber' as Tone, hint: 'target 1.0d' },
-  { label: 'Offer', value: 1.9, tone: 'emerald' as Tone, hint: 'target 2.0d' },
+const TIME_IN_STAGE_DEFAULT = [
+  { label: 'Screening', value: 0, tone: 'sky' as Tone, hint: 'target 2.0d' },
+  { label: 'Assessment', value: 0, tone: 'violet' as Tone, hint: 'target 3.0d' },
+  { label: 'Interview', value: 0, tone: 'fuchsia' as Tone, hint: 'target 4.0d' },
+  { label: 'Feedback', value: 0, tone: 'amber' as Tone, hint: 'target 1.0d' },
+  { label: 'Offer', value: 0, tone: 'emerald' as Tone, hint: 'target 2.0d' },
 ]
 
-const OPEN_MIX = [
-  { label: 'Engineering', value: 6, tone: 'indigo' as Tone },
-  { label: 'Data', value: 3, tone: 'violet' as Tone },
-  { label: 'Design', value: 2, tone: 'fuchsia' as Tone },
-  { label: 'Sales', value: 2, tone: 'amber' as Tone },
-  { label: 'Ops', value: 1, tone: 'teal' as Tone },
+const OPEN_MIX_DEFAULT = [
+  { label: 'Engineering', value: 0, tone: 'indigo' as Tone },
+  { label: 'Data', value: 0, tone: 'violet' as Tone },
+  { label: 'Design', value: 0, tone: 'fuchsia' as Tone },
+  { label: 'Sales', value: 0, tone: 'amber' as Tone },
+  { label: 'Ops', value: 0, tone: 'teal' as Tone },
 ]
 
 type DashboardRow = {
@@ -127,6 +127,12 @@ function useRecruiterDashboard() {
     { tone: 'rose' as Tone, icon: AlertTriangle, label: 'Jobs expiring', value: 0 },
   ])
 
+  const [inflow, setInflow] = React.useState(INFLOW_DEFAULT)
+  const [sources, setSources] = React.useState(SOURCES_DEFAULT)
+  const [timeInStage, setTimeInStage] = React.useState(TIME_IN_STAGE_DEFAULT)
+  const [openMix, setOpenMix] = React.useState(OPEN_MIX_DEFAULT)
+  const [funnel, setFunnel] = React.useState(recruiterKpis.funnel)
+
   React.useEffect(() => {
     let active = true
     void (async () => {
@@ -192,6 +198,12 @@ function useRecruiterDashboard() {
           ...dashboardRow,
         })
         setActiveJobs(activeJobRows.slice(0, 4))
+        
+        if (data.inflow) setInflow(data.inflow)
+        if (data.sources) setSources(data.sources)
+        if (data.timeInStage) setTimeInStage(data.timeInStage)
+        if (data.openMix) setOpenMix(data.openMix)
+        if (data.funnel) setFunnel(data.funnel)
       } catch {
         // Keep the zero-valued dashboard.
       }
@@ -215,7 +227,7 @@ function useRecruiterDashboard() {
     const deltas = [dashboard.active_jobs_delta, dashboard.applicants_delta, dashboard.shortlist_delta_days, dashboard.interview_to_offer_delta]
     return { ...stat, value: values[index], delta: deltas[index] }
   })
-  return { ...recruiterKpis, needsAttention, stats, kpiCards, activeJobs, topApplicants, activity }
+  return { ...recruiterKpis, needsAttention, stats, kpiCards, activeJobs, topApplicants, activity, inflow, sources, timeInStage, openMix, funnel }
 }
 type Data = ReturnType<typeof useRecruiterDashboard>
 
@@ -359,10 +371,10 @@ function AttentionRowA({ item, tone }: { item: Data['needsAttention'][number]; t
 
 const ATTENTION_TONES: Tone[] = ['indigo', 'rose', 'fuchsia', 'amber']
 
-function DashA({ needsAttention, funnel, activeJobs, topApplicants, kpiCards, activity }: Data) {
+function DashA({ needsAttention, funnel, activeJobs, topApplicants, kpiCards, activity, inflow, sources, timeInStage, openMix }: Data) {
   const activeJobsCount = kpiCards[0]?.value ?? 0
   const applicantsCount = kpiCards[1]?.value ?? 0
-  const totalOpen = OPEN_MIX.reduce((n, d) => n + d.value, 0)
+  const totalOpen = openMix.reduce((n, d) => n + d.value, 0)
 
   return (
     <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6">
@@ -427,7 +439,7 @@ function DashA({ needsAttention, funnel, activeJobs, topApplicants, kpiCards, ac
             tone="indigo"
             action={{ label: 'Analytics', to: '/recruiter/analytics' }}
           />
-          <AreaChart series={INFLOW} labels={WEEK_LABELS} height={220} />
+          <AreaChart series={inflow} labels={WEEK_LABELS} height={220} />
         </Tile>
 
         {/* funnel */}
@@ -440,14 +452,14 @@ function DashA({ needsAttention, funnel, activeJobs, topApplicants, kpiCards, ac
         <Tile className="lg:col-span-4">
           <SectionHeading title="Where applicants come from" icon={Users} tone="sky" />
           <div className="flex items-center justify-center py-2">
-            <DonutChart data={SOURCES} size={148} centerLabel="applicants" centerValue="312" />
+            <DonutChart data={sources} size={148} centerLabel="applicants" centerValue={applicantsCount.toString()} />
           </div>
         </Tile>
 
         {/* days in each stage */}
         <Tile className="lg:col-span-4">
           <SectionHeading title="Days spent in each stage" icon={Clock3} tone="amber" />
-          <HBarChart data={TIME_IN_STAGE} labelWidth="w-24" suffix="d" />
+          <HBarChart data={timeInStage} labelWidth="w-24" suffix="d" />
           <p className="mt-3 rounded-v-control bg-[var(--color-tone-amber-bg)] px-3 py-2 text-xs leading-relaxed text-tone-amber">
             Interview feedback is the slow step — 2.6 days against a 1-day target. Three overdue
             feedbacks are holding up three pipeline moves.
@@ -461,9 +473,9 @@ function DashA({ needsAttention, funnel, activeJobs, topApplicants, kpiCards, ac
             <span className="font-mono tnum text-3xl font-semibold text-ink">{totalOpen}</span>
             <span className="text-sm text-ink-3">roles open across 5 teams</span>
           </div>
-          <StackedBar data={OPEN_MIX} height={12} className="mt-3" />
+          <StackedBar data={openMix} height={12} className="mt-3" />
           <div className="mt-4 border-t border-line pt-3">
-            <BarChart data={OPEN_MIX} height={132} />
+            <BarChart data={openMix} height={132} />
           </div>
         </Tile>
 

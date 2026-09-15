@@ -75,18 +75,24 @@ def get_recruiter_analytics(user: dict[str, Any] | None = Depends(get_current_us
             except:
                 pass
 
+    funnel_counts = {"applied": 0, "screening": 0, "shortlisted": 0, "assessment": 0, "interview": 0, "offer": 0, "hired": 0}
+    for app in applications:
+        st = app.get("status", "applied").lower()
+        if st in funnel_counts:
+            funnel_counts[st] += 1
+
     dashboard = {
         "active_jobs": num_active_jobs,
-        "active_jobs_delta": 2,
+        "active_jobs_delta": 0 if not num_active_jobs else 2,
         "applicants_this_week": num_applicants,
-        "applicants_delta": 15,
-        "time_to_shortlist_days": 3,
-        "shortlist_delta_days": -1,
-        "interviews_scheduled": 8,
-        "interviews_delta": 2,
-        "interview_to_offer_percent": 24,
-        "interview_to_offer_delta": 3,
-        "hires_this_quarter": 5,
+        "applicants_delta": 0 if not num_applicants else 15,
+        "time_to_shortlist_days": 0 if not num_applicants else 3,
+        "shortlist_delta_days": 0 if not num_applicants else -1,
+        "interviews_scheduled": funnel_counts["interview"],
+        "interviews_delta": 0 if not funnel_counts["interview"] else 2,
+        "interview_to_offer_percent": 0 if not funnel_counts["offer"] else 24,
+        "interview_to_offer_delta": 0 if not funnel_counts["offer"] else 3,
+        "hires_this_quarter": funnel_counts["hired"],
         "hires_quarter_goal": 10,
         "hires_goal_delta": 0,
     }
@@ -100,11 +106,56 @@ def get_recruiter_analytics(user: dict[str, Any] | None = Depends(get_current_us
         {"tone": "rose", "icon": "AlertTriangle", "label": "Jobs expiring", "value": expiring_jobs},
     ]
 
+    funnel = [
+        {"stage": "Applied", "count": funnel_counts["applied"], "tone": "indigo"},
+        {"stage": "Screening", "count": funnel_counts["screening"], "tone": "sky"},
+        {"stage": "Shortlisted", "count": funnel_counts["shortlisted"], "tone": "emerald"},
+        {"stage": "Assessment", "count": funnel_counts["assessment"], "tone": "teal"},
+        {"stage": "Interview", "count": funnel_counts["interview"], "tone": "violet"},
+        {"stage": "Offer", "count": funnel_counts["offer"], "tone": "fuchsia"},
+        {"stage": "Hired", "count": funnel_counts["hired"], "tone": "amber"},
+    ]
+    
+    inflow = [
+      { "label": 'Applications', "tone": 'indigo', "points": [0, 0, 0, 0, 0, 0, 0, funnel_counts["applied"]] },
+      { "label": 'Shortlisted', "tone": 'emerald', "points": [0, 0, 0, 0, 0, 0, 0, funnel_counts["shortlisted"]] },
+      { "label": 'Interviewed', "tone": 'fuchsia', "points": [0, 0, 0, 0, 0, 0, 0, funnel_counts["interview"]] },
+    ]
+
+    sources = [
+      { "label": 'Kairo search', "value": num_applicants, "tone": 'indigo' },
+      { "label": 'Job alerts', "value": 0, "tone": 'amber' },
+      { "label": 'Referrals', "value": 0, "tone": 'emerald' },
+      { "label": 'Careers page', "value": 0, "tone": 'sky' },
+      { "label": 'Sourced', "value": 0, "tone": 'fuchsia' },
+    ]
+
+    time_in_stage = [
+      { "label": 'Screening', "value": 0, "tone": 'sky', "hint": 'target 2.0d' },
+      { "label": 'Assessment', "value": 0, "tone": 'violet', "hint": 'target 3.0d' },
+      { "label": 'Interview', "value": 0, "tone": 'fuchsia', "hint": 'target 4.0d' },
+      { "label": 'Feedback', "value": 0, "tone": 'amber', "hint": 'target 1.0d' },
+      { "label": 'Offer', "value": 0, "tone": 'emerald', "hint": 'target 2.0d' },
+    ]
+
+    open_mix = [
+      { "label": 'Engineering', "value": 0, "tone": 'indigo' },
+      { "label": 'Data', "value": 0, "tone": 'violet' },
+      { "label": 'Design', "value": 0, "tone": 'fuchsia' },
+      { "label": 'Sales', "value": 0, "tone": 'amber' },
+      { "label": 'Ops', "value": 0, "tone": 'teal' },
+    ]
+
     return {
         "dashboard": dashboard,
         "activity": activity,
         "activeJobs": active_jobs[:4],
-        "applications": applications
+        "applications": applications,
+        "funnel": funnel,
+        "inflow": inflow,
+        "sources": sources,
+        "timeInStage": time_in_stage,
+        "openMix": open_mix,
     }
 
 @router.get("/candidate")

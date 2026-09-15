@@ -271,12 +271,13 @@ export function FunnelChart({
   data: { stage: string; count: number }[]
   className?: string
 }) {
-  const max = Math.max(...data.map((d) => d.count))
+  const max = Math.max(1, ...data.map((d) => d.count))
   return (
     <div className={cn('space-y-1.5', className)}>
       {data.map((d, i) => {
         const pct = (d.count / max) * 100
-        const drop = i > 0 ? Math.round((1 - d.count / data[i - 1].count) * 100) : null
+        const prevCount = i > 0 ? data[i - 1].count : 0
+        const drop = i > 0 ? (prevCount === 0 ? 0 : Math.round((1 - d.count / prevCount) * 100)) : null
         const tone = FUNNEL_TONES[i % FUNNEL_TONES.length]
         // a bar under ~14% is too narrow to hold its own number legibly,
         // so the count moves outside it rather than being clipped
