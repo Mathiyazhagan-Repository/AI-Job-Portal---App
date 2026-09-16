@@ -70,7 +70,7 @@ const NAV: Record<Persona, { groups: { title?: string; items: NavItem[] }[]; mob
       {
         items: [
           { to: '/recruiter', label: 'Dashboard', icon: LayoutDashboard, name: 'LayoutDashboard', end: true, tone: 'indigo' },
-          { to: '/recruiter/jobs', label: 'Jobs', icon: Briefcase, name: 'Briefcase', badge: jobs.filter((j) => j.status === 'published').length, tone: 'violet' },
+          { to: '/recruiter/jobs', label: 'Jobs', icon: Briefcase, name: 'Briefcase', tone: 'violet' },
           { to: '/recruiter/candidates', label: 'Candidate search', icon: Users, name: 'Users', tone: 'sky' },
         ],
       },
@@ -272,10 +272,45 @@ export function AppLayout({ persona }: { persona: Persona }) {
   // Direction B collapses the sidebar to an icon rail by default —
   // the palette is the primary navigation there (DESIGN.md §6.3).
   const [collapsed, setCollapsed] = React.useState(variant === 'b')
+  const [recruiterJobCount, setRecruiterJobCount] = React.useState<number>()
 
   React.useEffect(() => setCollapsed(variant === 'b'), [variant])
 
-  const nav = NAV[persona]
+  React.useEffect(() => {
+    let active = true
+    if (persona === 'recruiter' && auth.token) {
+      fetch('http://localhost:8000/api/recruiter/jobs', {
+        headers: { Authorization: `Bearer ${auth.token}` }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!active) return
+        if (Array.isArray(data)) {
+          setRecruiterJobCount(data.filter((j: any) => j.status === 'published').length)
+        }
+      })
+      .catch(() => {})
+    }
+    return () => { active = false }
+  }, [persona, auth.token])
+
+  const nav = React.useMemo(() => {
+    const baseNav = JSON.parse(JSON.stringify(NAV[persona])) as typeof NAV[Persona]
+    // Re-attach icons
+    baseNav.groups.forEach((g, gi) => g.items.forEach((item, i) => {
+      item.icon = NAV[persona].groups[gi].items[i].icon
+    }))
+    baseNav.mobile.forEach((item, i) => {
+      item.icon = NAV[persona].mobile[i].icon
+    })
+
+    if (persona === 'recruiter' && recruiterJobCount !== undefined) {
+      const jobsItem = baseNav.groups[0].items.find(i => i.name === 'Briefcase' && i.label === 'Jobs')
+      if (jobsItem) jobsItem.badge = recruiterJobCount
+    }
+    return baseNav
+  }, [persona, recruiterJobCount])
+
   let meta = PERSONA_META[persona]
   if (persona === 'candidate') {
     meta = {

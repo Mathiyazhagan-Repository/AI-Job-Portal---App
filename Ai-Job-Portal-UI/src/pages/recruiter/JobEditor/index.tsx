@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/controls'
 import { AIProvenanceChip } from '@/components/brand'
 import { Kbd } from '@/components/common'
 import { useAuth } from '@/store/auth'
+import { useJobs } from '@/store/jobs'
 
 /**
  * R6 — the AI Job Description Generator (PRD Part 13.2).
@@ -71,6 +72,7 @@ function useJobEditor() {
   const [publishError, setPublishError] = React.useState<string | null>(null)
   const announce = useAnnounce()
   const { token } = useAuth()
+  const { refreshJobs } = useJobs()
 
   /** Streams section by section, the way the real endpoint will. */
   const generate = React.useCallback(async () => {
@@ -163,6 +165,7 @@ function useJobEditor() {
         throw new Error(errStr)
       }
 
+      await refreshJobs()
       announce('Job published successfully.')
       navigate('/recruiter/jobs')
     } catch (error) {

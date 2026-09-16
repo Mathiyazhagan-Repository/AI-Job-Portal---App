@@ -40,7 +40,7 @@ def _normalize_job(row: dict[str, Any]) -> dict[str, Any]:
         "salaryVisible": _first(row, "salary_visible", "salaryVisible", default=True),
         "requiredSkills": _as_list(_first(row, "required_skills", "requiredSkills")),
         "preferredSkills": _as_list(_first(row, "preferred_skills", "preferredSkills")),
-        "postedAt": _first(row, "posted_at", "postedAt", default=""),
+        "postedAt": _first(row, "published_at", "created_at", "posted_at", "postedAt", default=""),
         "applicants": _first(row, "applicants", default=0),
         "views": _first(row, "views", default=0),
         "status": _first(row, "status", default="published"),
